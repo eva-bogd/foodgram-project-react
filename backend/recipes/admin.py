@@ -8,15 +8,12 @@ from .models import (Tag, Ingredient, IngredientInRecipe, Recipe,
 # Добавить фильтры по автору, названию рецепта, тегам.
 # На странице рецепта вывести общее число добавлений этого рецепта в избранное.
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('author', 'name')  #'total_favorites')
+    list_display = ('author', 'name', 'total_favorites')
     list_filter = ('author', 'name', 'tags')
     empty_value_display = '-empty-'
 
-    # def total_favorites(self, obj):
-    #     return obj.favorite_set.count()
-
-    # total_favorites.admin_order_field = 'favorite_set__count'
-
+    def total_favorites(self, obj):
+        return Favorite.objects.filter(recipe=obj).count()
 
 # В список вывести название ингредиента и единицы измерения.
 # Добавить фильтр по названию.

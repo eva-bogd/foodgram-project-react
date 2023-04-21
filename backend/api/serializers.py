@@ -1,11 +1,25 @@
 import base64
 from django.core.files.base import ContentFile
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (Tag, Ingredient, IngredientInRecipe, Recipe,
-                            Subscribe, Favorite, ShoppingCart, User)
+                            Subscribe, Favorite, ShoppingCart)
+from users.models import User
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = '__all__'
+
+
+class CustomUserSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        model = User
+        fields = ('id', 'email', 'first_name', 'last_name')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -39,11 +53,11 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeGetSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
          slug_field='username', read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    ingredients = IngredientInRecipeSerializer(many=True)
+    ingredients = IngredientInRecipeSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -57,6 +71,34 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'ingredients',
                   'is_favorited',
                   'is_in_shopping_cart',
+                  'name',
+                  'image',
+                  'text',
+                  'cooking_time',)
+
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        return Favorite.objects.filter(
+            user_id=user.id, recipe_id=obj.id
+        ).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context['request'].user
+        return ShoppingCart.objects.filter(
+            user_id=user.id, recipe_id=obj.id
+        ).exists()
+
+
+class RecipeModifySerializer(serializers.ModelSerializer):
+    tags = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    ingredients = IngredientInRecipeSerializer(many=True)  # ??
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        # fields = ('id', 'name', 'text', 'cooking_time',)
+        fields = ('tags',
+                  'ingredients',
                   'name',
                   'image',
                   'text',
@@ -106,18 +148,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return Favorite.objects.filter(
-            user_id=user.id, recipe_id=obj.id
-        ).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        return ShoppingCart.objects.filter(
-            user_id=user.id, recipe_id=obj.id
-        ).exists()
-
 
 class RecipeShortLisTSerializer(serializers.ModelSerializer):
     class Meta:
@@ -150,8 +180,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
         # user = self.context['request'].user
         # author = Subscribe.objects.filter(user_id=user.id)
         # recipes = Recipe.objects.filter(author=author)
-        recipes = Recipe.objects.filter(author=obj.author)
-        return RecipeSerializer(recipes, many=True).data
+        recipes = Recipe.objects.filter(author=obj.author)[:6]
+        return RecipeGetSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.author.recipes.count()
@@ -181,7 +211,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
             if Favorite.objects.filter(
                     recipe_id=recipe, user_id=user).exists():
                 raise serializers.ValidationError(
-                    'Recipe already exists in favorite')
+                    "Recipe already exists in favorite.")
         return attrs
 
     def validate_delete(self, attrs):
@@ -192,7 +222,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
             if not Favorite.objects.filter(
                     recipe_id=recipe, user_id=user).exists():
                 raise serializers.ValidationError(
-                    'Recipe does not exist in favorite')
+                    "Recipe does not exist in favorite.")
         return attrs
 
 
@@ -213,7 +243,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             if ShoppingCart.objects.filter(
                     recipe_id=recipe, user_id=user).exists():
                 raise serializers.ValidationError(
-                    'Recipe already exists in shopping cart')
+                    "Recipe already exists in shopping cart.")
         return attrs
 
     def validate_delete(self, attrs):
@@ -224,5 +254,5 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             if not ShoppingCart.objects.filter(
                     recipe_id=recipe, user_id=user).exists():
                 raise serializers.ValidationError(
-                    'Recipe does not exist in shopping cart')
+                    "Recipe does not exist in shopping cart.")
         return attrs

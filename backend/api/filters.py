@@ -40,18 +40,10 @@ class RecipeFilter(django_filters.FilterSet):
 class IngredientFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name='name',
                                      lookup_expr='istartswith')
-    name__icontains = django_filters.CharFilter(field_name='name',
-                                                lookup_expr='icontains')
-
-    # name - это имя поля, по которому нужно фильтровать,
-    # а icontains - это оператор фильтрации, который говорит Django,
-    #  что необходимо искать строки, содержащие данное значение
-    # (в данном случае, частичное совпадение в начале строки),
-    # без учета регистра.
-    # __ - это специальный оператор, который используется в Django
-    # для указания различных параметров фильтрации.
-    # в данном случае, он используется для указания оператора фильтрации
-    # (lookup_expr).
+    # name__icontains = django_filters.CharFilter(field_name='name',
+    #                                             lookup_expr='icontains')
+    # name = django_filters.CharFilter(field_name='name',
+    #                                  lookup_expr='icontains')
 
     class Meta:
         model = Ingredient

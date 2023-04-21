@@ -3,6 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet
 
 import io
 from django.http import FileResponse
@@ -10,12 +11,30 @@ from reportlab.pdfgen import canvas
 
 
 from recipes.models import (Tag, Ingredient, IngredientInRecipe, Recipe,
-                            Subscribe, Favorite, ShoppingCart, User)
+                            Subscribe, Favorite, ShoppingCart)
+from users.models import User
 from .serializers import (TagSerializer, IngredientSerializer,
-                          RecipeSerializer, ShoppingCartSerializer,
-                          FavoriteSerializer, SubscribeSerializer)
-from .pagination import RecipePagination
+                          RecipeGetSerializer, RecipeModifySerializer,
+                          ShoppingCartSerializer, FavoriteSerializer,
+                          SubscribeSerializer, CustomUserCreateSerializer,
+                          CustomUserSerializer)
+from .pagination import FoodgramPagination
 from .filters import RecipeFilter, IngredientFilter
+
+
+class CustomUserViewSet(UserViewSet):
+    serializer_class = CustomUserSerializer
+    queryset = User.objects.all()
+    pagination_class = FoodgramPagination
+
+    action_serializers = {
+        'list': CustomUserSerializer,
+        'retrieve': CustomUserSerializer,
+        'create': CustomUserCreateSerializer,
+    }
+
+    def get_serializer_class(self):
+        return self.action_serializers.get(self.action)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -26,15 +45,29 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    pagination_class = RecipePagination
+    pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    action_serializers = {
+        'list': RecipeGetSerializer,
+        'retrieve': RecipeGetSerializer,
+        'create': RecipeModifySerializer,
+        'partial_update': RecipeModifySerializer,
+        'destroy': RecipeModifySerializer
+    }
+
+    def get_serializer_class(self):
+        return self.action_serializers.get(self.action)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class ShoppingCartAndSubscribeBaseViewSet(mixins.ListModelMixin,
@@ -86,7 +119,7 @@ class ShoppingCartViewSet(ShoppingCartAndSubscribeBaseViewSet):
 
 class SubscribeViewSet(ShoppingCartAndSubscribeBaseViewSet):
     serializer_class = SubscribeSerializer
-    pagination_class = RecipePagination
+    pagination_class = FoodgramPagination
 
     def get_queryset(self):
         user = self.request.user

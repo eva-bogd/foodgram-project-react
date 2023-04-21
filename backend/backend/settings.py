@@ -28,6 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'djoser',
     'colorfield',
     'sorl.thumbnail',
     'django_filters',
@@ -130,6 +132,20 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Auth customization
+
+AUTH_USER_MODEL = 'users.User'
+
+
+DJOSER = {
+    'HIDE': False,
+    'SERIALIZERS': {
+        'user_create': 'api.serializers.CustomUserCreateSerializer',
+        'user': 'api.serializers.CustomUserSerializer',
+    },
+    'VIEW_SET': 'api.views.CustomUserViewSet',
+}
 
 
 REST_FRAMEWORK = {
