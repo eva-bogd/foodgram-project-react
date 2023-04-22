@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
     'djoser',
     'colorfield',
     'sorl.thumbnail',
@@ -137,18 +139,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'users.User'
 
-
-DJOSER = {
-    'HIDE': False,
-    'SERIALIZERS': {
-        'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'user': 'api.serializers.CustomUserSerializer',
-    },
-    'VIEW_SET': 'api.views.CustomUserViewSet',
-}
-
-
 REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'api.pagination.FoodgramPagination',
     # 'PAGE_SIZE': 6,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+}
+
+DJOSER = {
+    'HIDE_USERS': False,
+    'SERIALIZERS': {
+        'user': 'api.serializers.CustomUserSerializer',
+        'current_user': 'api.serializers.CustomUserSerializer',
+    },
+    'VIEW_SET': 'api.views.CustomUserViewSet',
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.AllowAny'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    },
 }

@@ -45,21 +45,6 @@ class Ingredient(models.Model):
         return self.name
 
 
-class IngredientInRecipe(models.Model):
-    ingredient = models.ForeignKey(
-        Ingredient,
-        verbose_name='Ingredient',
-        on_delete=models.CASCADE,  # ???
-        related_name='ingredients_in_recipe')
-    amount = models.PositiveSmallIntegerField(
-        verbose_name='Ingredient amount',
-        validators=[MinValueValidator(1)],
-        blank=False)
-
-    def __str__(self):
-        return f'{self.ingredient.name} - {self.amount}'
-
-
 class Recipe(models.Model):
     author = models.ForeignKey(
         User,
@@ -77,10 +62,12 @@ class Recipe(models.Model):
     text = models.TextField(
         verbose_name='Description and instructions for cooking',
         blank=False)
-    ingredients = models.ManyToManyField(
-        IngredientInRecipe,
+    used_ingredients = models.ManyToManyField(
+        Ingredient,
+        through='IngredientInRecipe',
         verbose_name='Ingredients for cooking',
-        related_name='recipes')
+        related_name='recipes',
+        blank=False)
     tags = models.ManyToManyField(
         Tag,
         verbose_name='Recipe tags')
@@ -97,6 +84,25 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class IngredientInRecipe(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient,
+        verbose_name='Ingredient',
+        on_delete=models.CASCADE)  # ???
+    recipe = models.ForeignKey(
+        Recipe,
+        verbose_name='Recipe',
+        on_delete=models.CASCADE,
+        related_name='ingredients')  # ???)
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Ingredient amount',
+        validators=[MinValueValidator(1)],
+        blank=False)
+
+    def __str__(self):
+        return f'{self.ingredient.name} - {self.amount}'
 
 
 class Subscribe(models.Model):

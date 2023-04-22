@@ -16,8 +16,8 @@ from users.models import User
 from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeGetSerializer, RecipeModifySerializer,
                           ShoppingCartSerializer, FavoriteSerializer,
-                          SubscribeSerializer, CustomUserCreateSerializer,
-                          CustomUserSerializer)
+                          SubscribeSerializer, CustomUserSerializer,
+                          IngredientInRecipeGetSerializer)
 from .mixins import CreateDestroyViewSet, ListRetrieveCreateDestroyBaseViewSet
 from .pagination import FoodgramPagination
 from .filters import RecipeFilter, IngredientFilter
@@ -27,20 +27,6 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     queryset = User.objects.all()
     pagination_class = FoodgramPagination
-
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return CustomUserCreateSerializer
-        return CustomUserSerializer
-
-    # action_serializers = {
-    #     'list': CustomUserSerializer,
-    #     'retrieve': CustomUserSerializer,
-    #     'create': CustomUserCreateSerializer,
-    # }
-
-    # def get_serializer_class(self):
-    #     return self.action_serializers.get(self.action)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -55,6 +41,12 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = IngredientFilter
 
 
+class IngredientInRecipeViewSet(viewsets.ModelViewSet):
+    queryset = IngredientInRecipe.objects.all().prefetch_related(
+        'ingredient', 'recipe')
+    serializer_class = IngredientInRecipeGetSerializer
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeGetSerializer
@@ -63,7 +55,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def create(self, request):
-        serializer = RecipeModifySerializer(request.data)
+        serializer = RecipeModifySerializer(data=request.data)
         if serializer.is_valid():
             ingredients_data = serializer.validated_data.pop('ingredients')
             tags_data = serializer.validated_data.pop('tags')
@@ -121,7 +113,7 @@ class ShoppingCartViewSet(ListRetrieveCreateDestroyBaseViewSet):
         recipe_id = self.kwargs.get('recipe_id')
         serializer.delete(user=self.request.user, recipe_id=recipe_id)
 
-    @action(detail=False, methods=['get'])
+    # @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
         # Получаем список покупок
         shopping_cart = self.get_queryset

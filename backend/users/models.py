@@ -25,12 +25,9 @@ class User(AbstractUser):
         max_length=150,
         blank=False
     )
-    is_staff = models.BooleanField(
-        verbose_name='Admin status',
-        default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class UserRole(models.TextChoices):
         USER = 'user'

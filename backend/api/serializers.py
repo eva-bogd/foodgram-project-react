@@ -10,16 +10,18 @@ from recipes.models import (Tag, Ingredient, IngredientInRecipe, Recipe,
 from users.models import User
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
-    class Meta(UserCreateSerializer.Meta):
-        model = User
-        fields = '__all__'
-
-
 class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta(UserSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name')
+        fields = ('id', 'email', 'first_name', 'last_name', 'is_subscribed')
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        return Subscribe.objects.filter(
+            user_id=user.id, author_id=obj.id
+        ).exists()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -31,17 +33,18 @@ class TagSerializer(serializers.ModelSerializer):
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = '__all__'
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class IngredientInRecipeGetSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='ingredient.name')
+    name = serializers.CharField(source="ingredient.name")
     measurement_unit = serializers.CharField(
-        source='ingredient.measurement_unit')
+       source='ingredient.measurement_unit')
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('id', 'name', 'measurement_unit', 'amount',)
+        fields = ('id', 'amount', 'name', 'measurement_unit',)
+        # fields = '__all__'
 
 
 class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
@@ -62,8 +65,9 @@ class Base64ImageField(serializers.ImageField):
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-         slug_field='username', read_only=True)
+    # author = serializers.SlugRelatedField(
+    #      slug_field='username', read_only=True)
+    author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     ingredients = IngredientInRecipeGetSerializer(many=True, read_only=True)
     image = Base64ImageField()
@@ -101,14 +105,14 @@ class RecipeModifySerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all())
     ingredients = IngredientInRecipeCreateSerializer(many=True)
-    image = Base64ImageField()
+    #image = Base64ImageField()
 
     class Meta:
         model = Recipe
         fields = ('ingredients',
                   'tags',
                   'name',
-                  'image',
+                  #'image',
                   'text',
                   'cooking_time',)
 
