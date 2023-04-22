@@ -70,7 +70,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                 amount=ingredient_data['amount'])
             for tag_data in tags_data:
                 recipe.tags.add(tag_data)
-            serializer = RecipeGetSerializer(instance=recipe)
+            serializer = RecipeGetSerializer(instance=recipe,
+                                             context={'request': request})
             return Response(serializer.data, status.HTTP_201_CREATED)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
