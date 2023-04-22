@@ -34,7 +34,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class IngredientInRecipeSerializer(serializers.ModelSerializer):
+class IngredientInRecipeGetSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='ingredient.name')
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit')
@@ -42,6 +42,14 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = IngredientInRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount',)
+
+
+class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('id', 'amount',)
 
 
 class Base64ImageField(serializers.ImageField):
@@ -57,14 +65,13 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
          slug_field='username', read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    ingredients = IngredientInRecipeSerializer(many=True, read_only=True)
+    ingredients = IngredientInRecipeGetSerializer(many=True, read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
-        # fields = ('id', 'name', 'text', 'cooking_time',)
         fields = ('id',
                   'tags',
                   'author',
@@ -90,63 +97,20 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipeModifySerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    ingredients = IngredientInRecipeSerializer(many=True)  # ??
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all())
+    ingredients = IngredientInRecipeCreateSerializer(many=True)
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
-        # fields = ('id', 'name', 'text', 'cooking_time',)
-        fields = ('tags',
-                  'ingredients',
+        fields = ('ingredients',
+                  'tags',
                   'name',
                   'image',
                   'text',
                   'cooking_time',)
-
-    def create(self, validated_data):
-        # Извлекаем данные об ингредиентах и тегах из валидированных данных
-        # (ingredients_data и tags_data),
-        # а затем удаляем их из словаря validated_data.
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
-        # Cоздаем объект Recipe с помощью метода create модели Recipe,
-        # используя **validated_data, чтобы передать оставшиеся данные
-        recipe = Recipe.objects.create(**validated_data)
-        for ingredient_data in ingredients_data:
-            ingredient = get_object_or_404(Ingredient, ingredient_data['id'])
-            # Помещаем ссылку на каждый рецепт во вспомогательную таблицу
-            recipe.ingredients.add(IngredientInRecipe.objects.create(
-                ingredient=ingredient, amount=ingredient_data['amount']))
-        for tag_data in tags_data:
-            tag = get_object_or_404(Tag, tag_data['id'])
-            recipe.tags.add(tag)
-        return recipe
-
-    def update(self, instance, validated_data):
-        # instance - ссылка  на объект, который следует изменить
-        for field in ['tags',  # id??
-                      'author',
-                      'ingredients',
-                      'is_favorited',
-                      'is_in_shopping_cart',
-                      'name',
-                      'image',
-                      'text',
-                      'cooking_time']:
-            # setattr принимае три аргумента:
-            # - объект, которому нужно установить атрибут
-            # - имя атрибута, который нужно установить
-            # - значение атрибута
-
-            # проверяем наличие поля в validated_data,
-            # и если оно есть,устанавливаем его значение в instance,
-            # tесли нет: оставляем его значение без изменений
-            setattr(instance, field, validated_data.get(
-                field, getattr(instance, field)))
-                # getattr для получения текущего значения из instance
-        instance.save()
-        return instance
 
 
 class RecipeShortLisTSerializer(serializers.ModelSerializer):
@@ -164,7 +128,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         queryset=User.objects.all())
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    # is_subscribed = serializers.SerializerMethodField()??
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscribe
@@ -185,6 +149,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return obj.author.recipes.count()
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        return Subscribe.objects.filter(
+            user_id=user.id, author_id=obj.id
+        ).exists()
 
     def validate_author(self, value):
         if value == self.context['request'].user:
