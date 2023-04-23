@@ -167,66 +167,64 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return value
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
-    recipe = RecipeShortLisTSerializer(many=True, read_only=True)
+# class FavoriteSerializer(serializers.ModelSerializer):
+#     user = serializers.SlugRelatedField(
+#         read_only=True, slug_field='username'
+#     )
+#     recipe = RecipeShortLisTSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Favorite
-        fields = ('id', 'users', 'recipe')
+#     class Meta:
+#         model = Favorite
+#         fields = ('id', 'users', 'recipe')
 
-    def validate_add(self, attrs):
-        recipe = get_object_or_404(
-            Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-        user = self.context['request'].user
-        if self.context['request'].method == 'POST':
-            if Favorite.objects.filter(
-                    recipe_id=recipe, user_id=user).exists():
-                raise serializers.ValidationError(
-                    "Recipe already exists in favorite.")
-        return attrs
+#     def validate_add(self, attrs):
+#         recipe = get_object_or_404(
+#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
+#         user = self.context['request'].user
+#         if self.context['request'].method == 'POST':
+#             if Favorite.objects.filter(
+#                     recipe_id=recipe, user_id=user).exists():
+#                 raise serializers.ValidationError(
+#                     "Recipe already exists in favorite.")
+#         return attrs
 
-    def validate_delete(self, attrs):
-        recipe = get_object_or_404(
-            Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-        user = self.context['request'].user
-        if self.context['request'].method == 'DELETE':
-            if not Favorite.objects.filter(
-                    recipe_id=recipe, user_id=user).exists():
-                raise serializers.ValidationError(
-                    "Recipe does not exist in favorite.")
-        return attrs
+#     def validate_delete(self, attrs):
+#         recipe = get_object_or_404(
+#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
+#         user = self.context['request'].user
+#         if self.context['request'].method == 'DELETE':
+#             if not Favorite.objects.filter(
+#                     recipe_id=recipe, user_id=user).exists():
+#                 raise serializers.ValidationError(
+#                     "Recipe does not exist in favorite.")
+#         return attrs
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username')
-    recipes = serializers.StringRelatedField(many=True, read_only=True)
+# class ShoppingCartSerializer(serializers.ModelSerializer):
+#     recipe = RecipeShortLisTSerializer(read_only=True)
 
-    class Meta:
-        model = ShoppingCart
-        fields = ('id', 'user', 'recipes') # развернуть?
+#     class Meta:
+#         model = ShoppingCart
+#         fields = ('recipe',)
 
-    def validate_add(self, attrs):
-        recipe = get_object_or_404(
-            Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-        user = self.context['request'].user
-        if self.context['request'].method == 'POST':
-            if ShoppingCart.objects.filter(
-                    recipe_id=recipe, user_id=user).exists():
-                raise serializers.ValidationError(
-                    "Recipe already exists in shopping cart.")
-        return attrs
+#     def validate_add(self, attrs):
+#         recipe = get_object_or_404(
+#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
+#         user = self.context['request'].user
+#         if self.context['request'].method == 'POST':
+#             if ShoppingCart.objects.filter(
+#                     recipe_id=recipe, user_id=user).exists():
+#                 raise serializers.ValidationError(
+#                     "Recipe already exists in shopping cart.")
+#         return attrs
 
-    def validate_delete(self, attrs):
-        recipe = get_object_or_404(
-            Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-        user = self.context['request'].user
-        if self.context['request'].method == 'DELETE':
-            if not ShoppingCart.objects.filter(
-                    recipe_id=recipe, user_id=user).exists():
-                raise serializers.ValidationError(
-                    "Recipe does not exist in shopping cart.")
-        return attrs
+#     def validate_delete(self, attrs):
+#         recipe = get_object_or_404(
+#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
+#         user = self.context['request'].user
+#         if self.context['request'].method == 'DELETE':
+#             if not ShoppingCart.objects.filter(
+#                     recipe_id=recipe, user_id=user).exists():
+#                 raise serializers.ValidationError(
+#                     "Recipe does not exist in shopping cart.")
+#         return attrs

@@ -7,9 +7,8 @@ class CreateDestroyViewSet(mixins.CreateModelMixin,
     pass
 
 
-class ListRetrieveCreateDestroyBaseViewSet(mixins.ListModelMixin,
-                                           mixins.RetrieveModelMixin,
-                                           mixins.CreateModelMixin,
-                                           mixins.DestroyModelMixin,
-                                           viewsets.GenericViewSet):
+class ListCreateDestroyBaseViewSet(mixins.ListModelMixin,
+                                   mixins.CreateModelMixin,
+                                   mixins.DestroyModelMixin,
+                                   viewsets.GenericViewSet):
     pass

@@ -123,7 +123,7 @@ class Subscribe(models.Model):
         unique_together = ['user', 'author']
 
     def __str__(self):
-        return self.user
+        return f'{self.user.username} - {self.author.username}'
 
 
 class Favorite(models.Model):
@@ -148,7 +148,7 @@ class Favorite(models.Model):
         ordering = ('date_added',)
 
     def __str__(self):
-        return self.user
+        return f'{self.user.username}- {self.recipe}'
 
 
 class ShoppingCart(models.Model):
@@ -173,4 +173,4 @@ class ShoppingCart(models.Model):
         ordering = ('date_added',)
 
     def __str__(self):
-        return self.user
+        return f'{self.user.username} - {self.recipe}'

@@ -22,15 +22,28 @@ router_api_v1.register(r'^recipes', RecipeViewSet, basename='recipes')
 router_api_v1.register(r'^ingredients',
                        IngredientViewSet,
                        basename='ingredients')
-router_api_v1.register(r'^recipes/download_shopping_cart',  # ???
-                       ShoppingCartViewSet,
-                       basename='download_shopping_cart')
-router_api_v1.register(r'^recipes/(?P<recipe_id>\d+)/shopping_cart',
+router_api_v1.register(r'^recipes',
                        ShoppingCartViewSet,
                        basename='shopping_cart')
-router_api_v1.register(r'^recipes/(?P<recipe_id>\d+)/favorite',
+router_api_v1.register(r'^recipes',
                        FavoriteViewSet,
                        basename='favorite')
+
+# ???
+
+# router_api_v1.register(r'^recipes/download_shopping_cart',
+#                        ShoppingCartViewSet,
+#                        basename='download_shopping_cart')
+# router_api_v1.register(r'^recipes/(?P<recipe_id>\d+)/shopping_cart',
+#                        ShoppingCartViewSet,
+#                        basename='shopping_cart')
+
+# router_api_v1.register(r'^recipes',  # ???
+#                        ShoppingCartViewSet,
+#                        basename='download_shopping_cart')
+# router_api_v1.register(r'^recipes/(?P<recipe_id>\d+)/favorite',
+#                        FavoriteViewSet,
+#                        basename='favorite')
 
 urlpatterns = [
     path('', include(router_api_v1.urls)),
