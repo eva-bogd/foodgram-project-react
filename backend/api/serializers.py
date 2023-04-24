@@ -1,6 +1,6 @@
 import base64
 from django.core.files.base import ContentFile
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from rest_framework.validators import UniqueTogetherValidator
@@ -8,6 +8,14 @@ from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import (Tag, Ingredient, IngredientInRecipe, Recipe,
                             Subscribe, Favorite, ShoppingCart)
 from users.models import User
+
+from django.db.models import Count
+
+
+class RecipeShortLisTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ['id', 'name', 'image', 'cooking_time']
 
 
 class CustomUserSerializer(UserSerializer):
@@ -22,6 +30,46 @@ class CustomUserSerializer(UserSerializer):
         return Subscribe.objects.filter(
             user_id=user.id, author_id=obj.id
         ).exists()
+
+
+class SubscribeGetSerializer(serializers.ModelSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',)
+
+    def get_recipes(self, obj):
+        recipes_limit = self.context['request'].GET.get('recipes_limit')
+        if recipes_limit is not None:
+            recipes_limit = int(recipes_limit)
+        recipes = obj.recipes.all()[:recipes_limit]
+        serializer = RecipeShortLisTSerializer(recipes, many=True)
+        return serializer.data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.annotate(num_recipes=Count('author')).count()
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        return Subscribe.objects.filter(
+            user_id=user.id, author_id=obj.id
+        ).exists()
+
+    def validate_author(self, value):
+        if value == self.context['request'].user:
+            raise serializers.ValidationError(
+                "You can't subscribe to yourself.")
+        return value
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -115,116 +163,3 @@ class RecipeModifySerializer(serializers.ModelSerializer):
                   #'image',
                   'text',
                   'cooking_time',)
-
-
-class RecipeShortLisTSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = ['id', 'name', 'image', 'cooking_time']
-
-
-class SubscribeSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
-        default=serializers.CurrentUserDefault())
-    author = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=User.objects.all())
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Subscribe
-        fields = ('author', 'recipes', 'recipes_count')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscribe.objects.all(),
-                fields=('user', 'following'),
-                message="You are already subscribed to this author."
-            )]
-
-    def get_recipes(self, obj):
-        # user = self.context['request'].user
-        # author = Subscribe.objects.filter(user_id=user.id)
-        # recipes = Recipe.objects.filter(author=author)
-        recipes = Recipe.objects.filter(author=obj.author)[:6]
-        return RecipeGetSerializer(recipes, many=True).data
-
-    def get_recipes_count(self, obj):
-        return obj.author.recipes.count()
-
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        return Subscribe.objects.filter(
-            user_id=user.id, author_id=obj.id
-        ).exists()
-
-    def validate_author(self, value):
-        if value == self.context['request'].user:
-            raise serializers.ValidationError(
-                "You can't subscribe to yourself.")
-        return value
-
-
-# class FavoriteSerializer(serializers.ModelSerializer):
-#     user = serializers.SlugRelatedField(
-#         read_only=True, slug_field='username'
-#     )
-#     recipe = RecipeShortLisTSerializer(many=True, read_only=True)
-
-#     class Meta:
-#         model = Favorite
-#         fields = ('id', 'users', 'recipe')
-
-#     def validate_add(self, attrs):
-#         recipe = get_object_or_404(
-#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-#         user = self.context['request'].user
-#         if self.context['request'].method == 'POST':
-#             if Favorite.objects.filter(
-#                     recipe_id=recipe, user_id=user).exists():
-#                 raise serializers.ValidationError(
-#                     "Recipe already exists in favorite.")
-#         return attrs
-
-#     def validate_delete(self, attrs):
-#         recipe = get_object_or_404(
-#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-#         user = self.context['request'].user
-#         if self.context['request'].method == 'DELETE':
-#             if not Favorite.objects.filter(
-#                     recipe_id=recipe, user_id=user).exists():
-#                 raise serializers.ValidationError(
-#                     "Recipe does not exist in favorite.")
-#         return attrs
-
-
-# class ShoppingCartSerializer(serializers.ModelSerializer):
-#     recipe = RecipeShortLisTSerializer(read_only=True)
-
-#     class Meta:
-#         model = ShoppingCart
-#         fields = ('recipe',)
-
-#     def validate_add(self, attrs):
-#         recipe = get_object_or_404(
-#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-#         user = self.context['request'].user
-#         if self.context['request'].method == 'POST':
-#             if ShoppingCart.objects.filter(
-#                     recipe_id=recipe, user_id=user).exists():
-#                 raise serializers.ValidationError(
-#                     "Recipe already exists in shopping cart.")
-#         return attrs
-
-#     def validate_delete(self, attrs):
-#         recipe = get_object_or_404(
-#             Recipe, id=self.context['view'].kwargs.get('recipe_id'))
-#         user = self.context['request'].user
-#         if self.context['request'].method == 'DELETE':
-#             if not ShoppingCart.objects.filter(
-#                     recipe_id=recipe, user_id=user).exists():
-#                 raise serializers.ValidationError(
-#                     "Recipe does not exist in shopping cart.")
-#         return attrs
