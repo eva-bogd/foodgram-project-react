@@ -9,6 +9,7 @@ import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 # from django.utils.encoding import smart_str
+from django.db.models import Sum
 
 from recipes.models import (Tag, Ingredient, IngredientInRecipe, Recipe,
                             Subscribe, Favorite, ShoppingCart)
@@ -27,7 +28,6 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     queryset = User.objects.all()
     pagination_class = FoodgramPagination
-
 
     @action(methods=['get'], detail=False, url_path='subscriptions')
     def get_subscriptions(self, request):
@@ -55,6 +55,7 @@ class CustomUserViewSet(UserViewSet):
                 return Response({'error': "Subscription not found."}, status=status.HTTP_400_BAD_REQUEST)
             Subscribe.objects.filter(author=author, user=user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
@@ -139,32 +140,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart.objects.filter(recipe=recipe, user=user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # @action(methods=['get'], detail=False, url_path='download_shopping_cart/', url_name='download_shopping_cart')
     @action(methods=['get'], detail=False)
     def download_shopping_cart(self, request):
-        # Получаем список покупок
-        shopping_cart = ShoppingCart.objects.filter(user=self.request.user).select_related('recipe')
-        # Создаем PDF-файл в памяти
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        user = request.user
+        shopping_cart = IngredientInRecipe.objects.filter(
+            recipe__shopping_cart__user=user).values(
+                'ingredient__name', 'ingredient__measurement_unit').annotate(
+                    amount=Sum('amount'))
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer)
-        # Выводим список покупок в PDF-файл
-        # p.setFont('DejaVuSans', 12)  # Указываем шрифт
+        pdfmetrics.registerFont(TTFont('arial', 'arial.ttf'))
+        p.setFont('arial', 32)
         p.drawString(100, 750, "Shopping cart:")
         y = 700
         for item in shopping_cart:
-            # p.drawString(100, y, item.recipe)
-            p.drawString(100, y, str(item.recipe))
-            # p.drawString(100, y, str(item.recipe).encode('utf-8'))
-            # p.drawString(100, y, smart_str(item.recipe.name))
-            y -= 20
-        # Закрываем PDF-файл и отправляем его пользователю
+            p.drawString(100, y, f"{item.get('ingredient__name')}: {item.get('amount')} {item.get('ingredient__measurement_unit')}")
+        y -= 20
         p.showPage()
         p.save()
         buffer.seek(0)
         response = FileResponse(buffer, as_attachment=True,
                                 filename='shopping_cart.pdf')
         return response
-        # return Response('text')
 
     @action(methods=['post', 'delete'], detail=True, url_path='favorite')
     def create_or_delete_favorite(self, request, *args, **kwargs):
