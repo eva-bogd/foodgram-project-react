@@ -1,12 +1,9 @@
 from django.contrib import admin
 
-from .models import (Tag, Ingredient, IngredientInRecipe, Recipe,
-                     Subscribe, Favorite, ShoppingCart)
+from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
+                     ShoppingCart, Subscribe, Tag)
 
 
-# В списке рецептов вывести название и автора рецепта.
-# Добавить фильтры по автору, названию рецепта, тегам.
-# На странице рецепта вывести общее число добавлений этого рецепта в избранное.
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('author', 'name', 'total_favorites')
     list_filter = ('author', 'name', 'tags')
@@ -15,8 +12,7 @@ class RecipeAdmin(admin.ModelAdmin):
     def total_favorites(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
 
-# В список вывести название ингредиента и единицы измерения.
-# Добавить фильтр по названию.
+
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     list_filter = ('name',)

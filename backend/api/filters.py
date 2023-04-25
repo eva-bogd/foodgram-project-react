@@ -1,8 +1,6 @@
 import django_filters
 from django_filters import rest_framework as filters
-
-from recipes.models import Recipe, Tag, Ingredient
-
+from recipes.models import Ingredient, Recipe, Tag
 
 QUERY_PARAM = (
     (1, 'true'),
@@ -41,9 +39,9 @@ class RecipeFilter(django_filters.FilterSet):
         if user.is_anonymous:
             return queryset.none()
         if value == '1':
-            return queryset.filter(favorites__user=user)
+            return queryset.filter(shopping_cart__user=user)
         elif value == '0':
-            return queryset.exclude(favorites__user=user)
+            return queryset.exclude(shopping_cart__user=user)
         return queryset
 
 
