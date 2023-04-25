@@ -17,8 +17,7 @@ class RecipeFilter(django_filters.FilterSet):
     tags = filters.ModelMultipleChoiceFilter(queryset=Tag.objects.all(),
                                              field_name='tags__slug',
                                              to_field_name='slug')
-    author = filters.CharFilter(field_name='author__username',
-                                lookup_expr='exact')
+    author = filters.CharFilter(field_name='author__id')
     is_favorited = filters.ChoiceFilter(
         method='filter_favorited', choices=(QUERY_PARAM)
     )
