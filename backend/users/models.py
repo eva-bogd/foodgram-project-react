@@ -28,17 +28,3 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
-
-    class UserRole(models.TextChoices):
-        USER = 'user'
-        ADMIN = 'admin'
-
-    role = models.CharField(
-        verbose_name='Role',
-        max_length=50,
-        choices=UserRole.choices,
-        default=UserRole.USER,
-    )
-
-    def __str__(self):
-        return f'{self.username} - {self.email}'

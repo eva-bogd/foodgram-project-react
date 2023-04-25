@@ -65,12 +65,6 @@ class SubscribeGetSerializer(serializers.ModelSerializer):
             user_id=user.id, author_id=obj.id
         ).exists()
 
-    def validate_author(self, value):
-        if value == self.context['request'].user:
-            raise serializers.ValidationError(
-                "You can't subscribe to yourself.")
-        return value
-
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:

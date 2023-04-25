@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,20 +9,19 @@ from djoser.views import UserViewSet
 import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
-# from django.utils.encoding import smart_str
 from django.db.models import Sum
 
 from recipes.models import (Tag, Ingredient, IngredientInRecipe, Recipe,
                             Subscribe, Favorite, ShoppingCart)
 from users.models import User
 from .serializers import (TagSerializer, IngredientSerializer,
-                          IngredientInRecipeGetSerializer,
                           RecipeGetSerializer, RecipeModifySerializer,
                           RecipeShortLisTSerializer,
                           CustomUserSerializer, SubscribeGetSerializer,
                           )
 from .pagination import FoodgramPagination
 from .filters import RecipeFilter, IngredientFilter
+from .permissions import RecipePermission, ReadOnly
 
 
 class CustomUserViewSet(UserViewSet):
@@ -29,7 +29,10 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = FoodgramPagination
 
-    @action(methods=['get'], detail=False, url_path='subscriptions')
+    @action(methods=['get'],
+            detail=False,
+            url_path='subscriptions',
+            permission_classes=[IsAuthenticated])
     def get_subscriptions(self, request):
         user = self.request.user
         queryset = User.objects.filter(subscribers__user=user).prefetch_related('recipes')
@@ -38,7 +41,10 @@ class CustomUserViewSet(UserViewSet):
         serializer = SubscribeGetSerializer(result_page, context={'request': request}, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    @action(methods=['post', 'delete'], detail=True, url_path='subscribe')
+    @action(methods=['post', 'delete'],
+            detail=True,
+            url_path='subscribe',
+            permission_classes=[IsAuthenticated])
     def create_or_delete_subscription(self, request, *args, **kwargs):
         author = self.get_object()
         user = self.request.user
@@ -60,6 +66,7 @@ class CustomUserViewSet(UserViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = [IsAdminUser | ReadOnly]
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -67,12 +74,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
-
-
-class IngredientInRecipeViewSet(viewsets.ModelViewSet):
-    queryset = IngredientInRecipe.objects.all().prefetch_related(
-        'ingredient', 'recipe')
-    serializer_class = IngredientInRecipeGetSerializer
+    permission_classes = [IsAdminUser | ReadOnly]
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -81,8 +83,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    permission_classes = [RecipePermission]
 
-    def create_recipe(self, request):
+    def create(self, request):
         serializer = RecipeModifySerializer(data=request.data)
         if serializer.is_valid():
             ingredients_data = serializer.validated_data.pop('ingredients')
@@ -103,12 +106,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status.HTTP_201_CREATED)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-    def update_recipe(self, request, *args, **kwargs):
-        serializer = RecipeModifySerializer(request.data)
+    def update(self, request, *args, **kwargs):
+        self.check_object_permissions(request, self.get_object())
+        serializer = RecipeModifySerializer(data=request.data)
         if serializer.is_valid():
             ingredients_data = serializer.validated_data.pop('ingredients')
             tags_data = serializer.validated_data.pop('tags')
-            recipe = get_object_or_404(Recipe, id=kwargs['id'])
+            recipe = get_object_or_404(Recipe, id=kwargs['pk'])
             Recipe.objects.filter(
                 id=recipe.id).update(**serializer.validated_data)
             IngredientInRecipe.objects.filter(recipe=recipe).delete()
@@ -120,11 +124,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe.tags.clear()
             for tag_data in tags_data:
                 recipe.tags.add(tag_data)
-            serializer = RecipeGetSerializer(instance=recipe)
+            serializer = RecipeGetSerializer(instance=recipe,
+                                             context={'request': request})
             return Response(serializer.data, status.HTTP_201_CREATED)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['post', 'delete'], detail=True, url_path='shopping_cart')
+    @action(methods=['post', 'delete'],
+            detail=True,
+            url_path='shopping_cart',
+            permission_classes=[IsAuthenticated])
     def create_or_delete_shopping_cart(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = self.request.user
@@ -140,7 +148,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart.objects.filter(recipe=recipe, user=user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(methods=['get'], detail=False)
+    @action(methods=['get'],
+            detail=False,
+            permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
@@ -161,11 +171,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         p.showPage()
         p.save()
         buffer.seek(0)
-        response = FileResponse(buffer, as_attachment=True,
-                                filename='shopping_cart.pdf')
-        return response
+        return FileResponse(buffer,
+                            as_attachment=True,
+                            filename='shopping_cart.pdf')
 
-    @action(methods=['post', 'delete'], detail=True, url_path='favorite')
+    @action(methods=['post', 'delete'],
+            detail=True,
+            url_path='favorite',
+            permission_classes=[IsAuthenticated])
     def create_or_delete_favorite(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = self.request.user
