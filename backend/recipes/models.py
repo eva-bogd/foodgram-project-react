@@ -33,13 +33,14 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Ingredient name',
         max_length=200,
-        unique=True,
         blank=False)
     measurement_unit = models.CharField(
         verbose_name='Ingredient measurement unit',
         max_length=200,
-        unique=True,
         blank=False)
+
+    class Meta:
+        unique_together = ['name', 'measurement_unit']
 
     def __str__(self):
         return self.name

@@ -4,9 +4,6 @@ from django_filters import rest_framework as filters
 from recipes.models import Recipe, Tag, Ingredient
 
 
-from django_filters.filters import BaseCSVFilter
-
-
 QUERY_PARAM = (
     (1, 'true'),
     (0, 'false')
@@ -53,10 +50,6 @@ class RecipeFilter(django_filters.FilterSet):
 class IngredientFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name='name',
                                      lookup_expr='istartswith')
-    # name__icontains = django_filters.CharFilter(field_name='name',
-    #                                             lookup_expr='icontains')
-    # name = django_filters.CharFilter(field_name='name',
-    #                                  lookup_expr='icontains')
 
     class Meta:
         model = Ingredient
