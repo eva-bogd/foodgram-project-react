@@ -131,6 +131,13 @@ dmypy.json
 # .idea
 .idea
 
+
+# Static
+media/
+static/
+
+
+
 config.ini
 postgres_data
 
