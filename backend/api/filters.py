@@ -24,25 +24,21 @@ class RecipeFilter(django_filters.FilterSet):
         model = Recipe
         fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
-    def filter_favorited(self, queryset, name, value):
+    def filter_by_field(self, queryset, value, field):
         user = self.request.user
         if user.is_anonymous:
             return queryset.none()
         if value == '1':
-            return queryset.filter(favorites__user=user)
+            return queryset.filter(**{field + '__user': user})
         elif value == '0':
-            return queryset.exclude(favorites__user=user)
+            return queryset.exclude(**{field + '__user': user})
         return queryset
 
+    def filter_favorited(self, queryset, name, value):
+        return self.filter_by_field(queryset, value, 'favorites')
+
     def filter_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if user.is_anonymous:
-            return queryset.none()
-        if value == '1':
-            return queryset.filter(shopping_cart__user=user)
-        elif value == '0':
-            return queryset.exclude(shopping_cart__user=user)
-        return queryset
+        return self.filter_by_field(queryset, value, 'shopping_cart')
 
 
 class IngredientFilter(django_filters.FilterSet):

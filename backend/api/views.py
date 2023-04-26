@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import A4
 from users.models import User
 
 from .filters import IngredientFilter, RecipeFilter
@@ -98,6 +99,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
     permission_classes = [RecipePermission]
 
+    """
+    Helper method to create or update a recipe.
+
+    Args:
+    request (Request): The HTTP request object.
+    instance_id (int): The id of the recipe instance to be updated, if any.
+
+    Returns:
+    Response: Serialized data of the created or updated recipe,
+    or an error message.
+    """
+
     def create_or_update(self, request, instance_id):
         serializer = RecipeModifySerializer(
             data=request.data,
@@ -105,7 +118,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             ingredients = serializer.validated_data.pop('ingredients')
             tags = serializer.validated_data.pop('tags')
-
             if instance_id is None:
                 user = request.user
                 recipe = Recipe.objects.create(
@@ -119,7 +131,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 recipe.refresh_from_db()
                 IngredientInRecipe.objects.filter(recipe=recipe).delete()
                 recipe.tags.clear()
-
             for ingredient in ingredients:
                 IngredientInRecipe.objects.create(
                     ingredient=ingredient['id'],
@@ -127,7 +138,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     recipe=recipe)
             for tag in tags:
                 recipe.tags.add(tag)
-
             response_serializer = RecipeGetSerializer(
                 instance=recipe,
                 context={'request': request})
@@ -180,14 +190,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer)
         pdfmetrics.registerFont(TTFont('arial', 'arial.ttf'))
-        p.setFont('arial', 32)
-        p.drawString(100, 750, "Shopping cart:")
-        y = 700
+        p.setFont('arial', 16)
+        p.drawString(100, 750, "Список покупок:")
+        page_w, page_h = A4
+        line_h = page_h - 100
         for item in shopping_cart:
-            p.drawString(
-                100, y, f"{item.get('ingredient__name')}: {item.get('amount')}"
-                        f"{item.get('ingredient__measurement_unit')}")
-        y -= 20
+            line_h -= 28
+            p.setStrokeColor('black')
+            p.rect(90, line_h - 2, 16, 16, fill=0, stroke=1)
+            text = (f"{item['ingredient__name']} - {item['amount']}"
+                    f" {item['ingredient__measurement_unit']}")
+            p.drawString(120, line_h, text)
+            p.setStrokeColor('lightgrey')
+            p.line(80, line_h - 8, page_w - 80, line_h - 8)
         p.showPage()
         p.save()
         buffer.seek(0)

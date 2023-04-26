@@ -26,7 +26,7 @@ class Tag(models.Model):
         blank=False)
 
     def __str__(self):
-        return self.name
+        return f'{self.name} #{self.slug}'
 
 
 class Ingredient(models.Model):
@@ -50,7 +50,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         verbose_name='Recipe author',
-        on_delete=models.CASCADE,  # ??
+        on_delete=models.CASCADE,
         related_name='recipes')
     name = models.CharField(
         verbose_name='Recipe name',
@@ -91,12 +91,12 @@ class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         verbose_name='Ingredient',
-        on_delete=models.CASCADE)  # ???
+        on_delete=models.CASCADE)
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Recipe',
         on_delete=models.CASCADE,
-        related_name='ingredients')  # ???)
+        related_name='ingredients')
     amount = models.PositiveSmallIntegerField(
         verbose_name='Ingredient amount',
         validators=[MinValueValidator(1)],

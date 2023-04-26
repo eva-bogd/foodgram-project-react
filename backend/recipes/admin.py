@@ -5,7 +5,7 @@ from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('author', 'name', 'total_favorites')
+    list_display = ('name', 'author', 'total_favorites')
     list_filter = ('author', 'name', 'tags')
     empty_value_display = '-empty-'
 
