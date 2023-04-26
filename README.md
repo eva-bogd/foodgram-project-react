@@ -49,9 +49,9 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-7. Откройте веб-браузер и перейдите по адресу http://localhost:8000/
+7. Откройте веб-браузер и перейдите по адресу http://localhost/
 
 
 ### Документация API
 
-Документация API находится по адресу http://localhost:8000/api/docs/
+Документация API находится по адресу http://localhost/api/docs/
