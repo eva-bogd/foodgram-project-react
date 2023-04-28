@@ -1,4 +1,4 @@
-[![Built with Django](https://img.shields.io/badge/built%20with-Django-blue.svg)](https://www.djangoproject.com/)
+[![Built with Django REST framework](https://img.shields.io/badge/Built_with-Django_REST_framework-green.svg)](https://www.django-rest-framework.org/)
 
 # Foodgram
 
