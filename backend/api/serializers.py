@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db.models import Count
 from djoser.serializers import UserSerializer
 from django.shortcuts import get_object_or_404
 from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
