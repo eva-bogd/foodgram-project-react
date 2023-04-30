@@ -4,16 +4,17 @@ from django.db.models import Sum
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
-                            ShoppingCart, Subscribe, Tag)
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import A4
+
+from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
+                            ShoppingCart, Subscribe, Tag)
 from users.models import User
 
 from .filters import IngredientFilter, RecipeFilter
@@ -37,8 +38,7 @@ class CustomUserViewSet(UserViewSet):
     def get_subscriptions(self, request):
         user = self.request.user
         queryset = User.objects.filter(
-            subscribers__user=user
-            ).prefetch_related('recipes')
+            subscribers__user=user).prefetch_related('recipes')
         paginator = FoodgramPagination()
         result_page = paginator.paginate_queryset(queryset, request)
         serializer = SubscribeGetSerializer(
@@ -161,7 +161,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe__shopping_cart__user=user).values(
                 'ingredient__name',
                 'ingredient__measurement_unit').annotate(
-                 amount=Sum('amount'))
+                amount=Sum('amount'))
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer)
         pdfmetrics.registerFont(TTFont('arial', 'arial.ttf'))

@@ -1,5 +1,4 @@
 flake8
 pep8-naming
 flake8-broken-line
-flake8-return
 flake8-isort

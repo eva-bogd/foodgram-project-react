@@ -1,11 +1,12 @@
 import base64
 
 from django.core.files.base import ContentFile
-from djoser.serializers import UserSerializer
 from django.shortcuts import get_object_or_404
+from djoser.serializers import UserSerializer
+from rest_framework import serializers
+
 from recipes.models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                             ShoppingCart, Subscribe, Tag)
-from rest_framework import serializers
 from users.models import User
 
 
@@ -95,7 +96,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientInRecipeGetSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='ingredient.name')
     measurement_unit = serializers.CharField(
-       source='ingredient.measurement_unit')
+        source='ingredient.measurement_unit')
 
     class Meta:
         model = IngredientInRecipe
@@ -169,11 +170,11 @@ class RecipeModifySerializer(serializers.ModelSerializer):
 
     def bulk_create_ingredients(self, ingredients_data, recipe):
         IngredientInRecipe.objects.bulk_create(
-                [IngredientInRecipe(
-                    recipe=recipe,
-                    ingredient=ingredient_data['id'],
-                    amount=ingredient_data['amount'])
-                    for ingredient_data in ingredients_data])
+            [IngredientInRecipe(
+                recipe=recipe,
+                ingredient=ingredient_data['id'],
+                amount=ingredient_data['amount'])
+                for ingredient_data in ingredients_data])
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')

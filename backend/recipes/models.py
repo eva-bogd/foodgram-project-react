@@ -1,9 +1,7 @@
 from colorfield.fields import ColorField
-from django.db import models
 from django.contrib.auth import get_user_model
-
 from django.core.validators import MinValueValidator
-
+from django.db import models
 
 User = get_user_model()
 
@@ -12,18 +10,15 @@ class Tag(models.Model):
     name = models.CharField(
         verbose_name='Tag name',
         max_length=200,
-        unique=True
-        )
+        unique=True)
     color = ColorField(
         verbose_name='Tag color',
         max_length=200,
-        format='hex'
-        )
+        format='hex')
     slug = models.SlugField(
         verbose_name='Tag slug',
         max_length=200,
-        unique=True
-        )
+        unique=True)
 
     def __str__(self):
         return f'{self.name} #{self.slug}'
@@ -32,12 +27,10 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Ingredient name',
-        max_length=200
-        )
+        max_length=200)
     measurement_unit = models.CharField(
         verbose_name='Ingredient measurement unit',
-        max_length=200
-        )
+        max_length=200)
 
     class Meta:
         unique_together = ['name', 'measurement_unit']
@@ -51,37 +44,29 @@ class Recipe(models.Model):
         User,
         verbose_name='Recipe author',
         on_delete=models.CASCADE,
-        related_name='recipes'
-        )
+        related_name='recipes')
     name = models.CharField(
         verbose_name='Recipe name',
-        max_length=200
-        )
+        max_length=200)
     image = models.ImageField(
         verbose_name='Recipe image',
-        upload_to='recipes/images/'
-        )
+        upload_to='recipes/images/')
     text = models.TextField(
-        verbose_name='Description and instructions for cooking'
-        )
+        verbose_name='Description and instructions for cooking')
     used_ingredients = models.ManyToManyField(
         Ingredient,
         through='IngredientInRecipe',
         verbose_name='Ingredients for cooking',
-        related_name='recipes'
-        )
+        related_name='recipes')
     tags = models.ManyToManyField(
         Tag,
-        verbose_name='Recipe tags'
-        )
+        verbose_name='Recipe tags')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Cooking time in minutes',
-        validators=[MinValueValidator(1)]
-        )
+        validators=[MinValueValidator(1)])
     date_published = models.DateTimeField(
         verbose_name='Date published',
-        auto_now_add=True
-        )
+        auto_now_add=True)
 
     class Meta:
         ordering = ('-date_published',)
@@ -94,14 +79,12 @@ class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         verbose_name='Ingredient',
-        on_delete=models.CASCADE
-        )
+        on_delete=models.CASCADE)
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Recipe',
         on_delete=models.CASCADE,
-        related_name='ingredients'
-        )
+        related_name='ingredients')
     amount = models.PositiveSmallIntegerField(
         verbose_name='Ingredient amount',
         validators=[MinValueValidator(1)])
@@ -115,14 +98,12 @@ class Subscribe(models.Model):
         User,
         verbose_name='Subscriber',
         on_delete=models.CASCADE,
-        related_name='subscriptions'
-        )
+        related_name='subscriptions')
     author = models.ForeignKey(
         User,
         verbose_name='Author',
         on_delete=models.CASCADE,
-        related_name='subscribers'
-        )
+        related_name='subscribers')
 
     class Meta:
         unique_together = ['user', 'author']
@@ -136,18 +117,15 @@ class Favorite(models.Model):
         User,
         verbose_name='Username',
         on_delete=models.CASCADE,
-        related_name='favorites'
-        )
+        related_name='favorites')
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Favorite recipes',
         on_delete=models.CASCADE,
-        related_name='favorites'
-        )
+        related_name='favorites')
     date_added = models.DateTimeField(
         verbose_name='Date added to favorites',
-        auto_now_add=True
-        )
+        auto_now_add=True)
 
     class Meta:
         unique_together = ['user', 'recipe']
@@ -162,18 +140,15 @@ class ShoppingCart(models.Model):
         User,
         verbose_name='Username',
         on_delete=models.CASCADE,
-        related_name='shopping_cart'
-        )
+        related_name='shopping_cart')
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Recipes in cart',
         on_delete=models.CASCADE,
-        related_name='shopping_cart'
-        )
+        related_name='shopping_cart')
     date_added = models.DateTimeField(
         verbose_name='Date added to cart',
-        auto_now_add=True
-        )
+        auto_now_add=True)
 
     class Meta:
         unique_together = ['user', 'recipe']
