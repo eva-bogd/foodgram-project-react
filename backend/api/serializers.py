@@ -167,16 +167,20 @@ class RecipeModifySerializer(serializers.ModelSerializer):
                   'text',
                   'cooking_time',)
 
+    def bulk_create_ingredients(self, ingredients_data, recipe):
+        IngredientInRecipe.objects.bulk_create(
+                [IngredientInRecipe(
+                    recipe=recipe,
+                    ingredient=ingredient_data['id'],
+                    amount=ingredient_data['amount'])
+                    for ingredient_data in ingredients_data])
+
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
         author = self.context.get('author')
         recipe = Recipe.objects.create(author=author, **validated_data)
-        for ingredient_data in ingredients_data:
-            IngredientInRecipe.objects.create(
-                recipe=recipe,
-                ingredient=ingredient_data['id'],
-                amount=ingredient_data['amount'])
+        self.bulk_create_ingredients(ingredients_data, recipe)
         recipe.tags.set(tags_data)
         return recipe
 
@@ -184,11 +188,7 @@ class RecipeModifySerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
         IngredientInRecipe.objects.filter(recipe=instance).delete()
-        for ingredient_data in ingredients_data:
-            IngredientInRecipe.objects.create(
-                recipe=instance,
-                ingredient=ingredient_data['id'],
-                amount=ingredient_data['amount'])
+        self.bulk_create_ingredients(ingredients_data, instance)
         instance.tags.clear()
         instance.tags.set(tags_data)
         super().update(instance=instance, validated_data=validated_data)

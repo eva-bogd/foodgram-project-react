@@ -94,11 +94,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     """
     Helper method to create or update a recipe.
-
     Args:
     request (Request): The HTTP request object.
     instance_id (int): The id of the recipe instance to be updated, if any.
-
     Returns:
     Response: Serialized data of the created or updated recipe,
     or an error message.
