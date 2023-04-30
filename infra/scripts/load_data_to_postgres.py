@@ -1,6 +1,7 @@
-import psycopg2
-import csv
 import configparser
+import csv
+
+import psycopg2
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -11,15 +12,14 @@ try:
         user=config['postgresql']['user'],
         password=config['postgresql']['password'],
         host=config['postgresql']['host'],
-        port=config['postgresql']['port']
-        )
+        port=config['postgresql']['port'])
     cur = conn.cursor()
 
     with open('../../data/ingredients.csv', 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
-            cur.execute("INSERT INTO recipes_ingredient \
-                (name, measurement_unit) VALUES (%s, %s)", row)
+            cur.execute(f"INSERT INTO recipes_ingredient"
+                        f"(name, measurement_unit) VALUES ({row}, {row})")
 except Exception as e:
     print(f'Error: {e}')
     conn.rollback()
