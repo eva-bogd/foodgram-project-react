@@ -11,9 +11,7 @@ services:
       - 5432:5432
 
   web:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: eva113/foodgram:latest
     restart: always
     volumes:
       - static_value:/app/static/
