@@ -5,7 +5,6 @@ django-colorfield==0.8.0
 django-filter==23.1
 djoser==2.2.0
 docopt==0.6.2
-flake8==6.0.0
 flask-markdown==0.3
 frozen-flask==0.18
 gevent==22.10.2
