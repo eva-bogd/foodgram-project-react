@@ -10,6 +10,4 @@ COPY ./ .
 
 COPY ../infra/scripts/ ./scripts
 
-COPY ../data/ingredients.csv ./data
-
 CMD ["gunicorn", "backend.wsgi:application", "--bind", "0:8000" ]
