@@ -9,6 +9,8 @@ class RecipePermission(IsAuthenticatedOrReadOnly):
         if ((request.method in ('PATCH', 'DELETE')
                 and obj.author == request.user)):
             return True
+        if request.method in SAFE_METHODS:
+            return True
         return False
 
 
