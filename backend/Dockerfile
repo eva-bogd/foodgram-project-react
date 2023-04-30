@@ -8,6 +8,4 @@ RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY ./ .
 
-COPY ../infra/scripts/ ./scripts
-
 CMD ["gunicorn", "backend.wsgi:application", "--bind", "0:8000" ]
