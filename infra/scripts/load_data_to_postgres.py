@@ -18,8 +18,8 @@ try:
     with open('./ingredients.csv', 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
-            cur.execute(f"INSERT INTO recipes_ingredient"
-                        f"(name, measurement_unit) VALUES ({row}, {row})")
+            cur.execute("INSERT INTO recipes_ingredient \
+                (name, measurement_unit) VALUES (%s, %s)", row)
 except Exception as e:
     print(f'Error: {e}')
     conn.rollback()
