@@ -149,5 +149,3 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.AllowAny'],
     },
 }
-
-USE_X_FORWARDED_HOST = True
