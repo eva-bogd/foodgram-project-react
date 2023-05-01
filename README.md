@@ -66,3 +66,4 @@ docker-compose exec web python load_data_to_postgres.py
 ```
 
 7. Откройте веб-браузер и перейдите по адресу http://84.201.137.218/
+
