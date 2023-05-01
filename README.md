@@ -1,40 +1,58 @@
 [![Built with Django REST framework](https://img.shields.io/badge/Built_with-Django_REST_framework-green.svg)](https://www.django-rest-framework.org/)
+![example workflow](https://github.com/Eva-48k/yamdb_final/actions/workflows/yamdb_workflow.yml/badge.svg)
 
-# Foodgram
+## Foodgram
 
 **Foodgram** - это удобный помощник в планировании вашего рациона и осуществлении кулинарных фантазий. Здесь вы можете публиковать свои рецепты, изучать кулинарные шедевры других пользователей, сохранять избранные блюда и легко создавать списки продуктов для их приготовления.
-
 Бэкенд для **Foodgram** написан на фреймворке Django.
-В скором времени появится возможность для развертывания проекта с использованием Docker)
+
+**Проект доступен по ссылке: http://84.201.137.218/**
+
+Данные для входа в админку:
+```
+http://84.201.137.218/admin/
+
+Email: ev002@list.ru
+Пароль: 123
+```
+**API доступно по ссылке: http://84.201.137.218/api/**
+
+**Документация API: http://84.201.137.218/api/docs/redoc.html**
+
 
 ### Установка
 
-Чтобы установить проект **Foodgram** локально, выполните следующие шаги:
+Чтобы запустить проект **Foodgram** в контейнерах Docker, выполните следующие шаги:
 
 1. Склонируйте репозиторий с помощью команды:
 
 ```
-git clone https://github.com/<your_username>/foodgram.git
+git clone git@github.com:Eva-48k/foodgram-project-react.gitt
 ```
 
-2. Создайте и активируйте виртуальное окружение:
+2. В папке проекта infra/ создайте файл .env со следующим содержимым:
 
 ```
-python -m venv venv
-source venv/bin/activate  # для Linux/Mac
-venv\Scripts\activate  # для Windows
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+SECRET_KEY=secret_key
 ```
 
-3. Установите зависимости:
+3. Запустите контейнеры Docker::
 
 ```
-pip install -r requirements.txt
+docker-compose up --build
 ```
 
 4. Создайте базу данных и примените миграции:
 
 ```
-python manage.py migrate
+docker-compose exec web python manage.py makemigrations
+docker-compose exec web python manage.py migrate
 ```
 
 5. Создайте суперпользователя:
@@ -43,17 +61,10 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-6. Запустите сервер:
+6. Загрузите начальные данные:
 
 ```
-python manage.py runserver
+docker-compose exec web python load_data_to_postgres.py
 ```
 
-7. Откройте веб-браузер и перейдите по адресу http://localhost/
-
-
-### Документация API
-
-Документация API находится по адресу http://localhost/api/docs/
-
------
+7. Откройте веб-браузер и перейдите по адресу http://84.201.137.218/
