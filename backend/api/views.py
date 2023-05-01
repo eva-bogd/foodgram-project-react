@@ -163,8 +163,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 amount=Sum('amount'))
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer)
-        pdfmetrics.registerFont(TTFont('arial', 'arial.ttf'))
-        p.setFont('arial', 16)
+        pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
+        p.setFont('OpenSans', 16)
         p.drawString(100, 750, "Список покупок:")
         page_w, page_h = A4
         line_h = page_h - 100
