@@ -123,6 +123,12 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         return super().to_internal_value(data)
 
+    def run_validation(self, data=serializers.empty):
+        # check if image is required
+        if self.context['request'].method == 'POST' and not data:
+            raise serializers.ValidationError('This field is required.')
+        return super().run_validation(data)
+
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
