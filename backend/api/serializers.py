@@ -114,7 +114,8 @@ class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
+        # if isinstance(data, str) and data.startswith('data:image'):
+        if isinstance(data.get('image'), str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
@@ -188,14 +189,9 @@ class RecipeModifySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
-        # Переданный файл изображения или None
-        image = validated_data.pop('image', None)
         IngredientInRecipe.objects.filter(recipe=instance).delete()
         self.bulk_create_ingredients(ingredients_data, instance)
         instance.tags.clear()
         instance.tags.set(tags_data)
         super().update(instance=instance, validated_data=validated_data)
-        if image:  # Если было передано новое изображение
-            instance.image = image
-            instance.save()
         return instance
