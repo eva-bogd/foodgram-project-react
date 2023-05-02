@@ -188,9 +188,14 @@ class RecipeModifySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
+        # Переданный файл изображения или None
+        image = validated_data.pop('image', None)
         IngredientInRecipe.objects.filter(recipe=instance).delete()
         self.bulk_create_ingredients(ingredients_data, instance)
         instance.tags.clear()
         instance.tags.set(tags_data)
         super().update(instance=instance, validated_data=validated_data)
+        if image:  # Если было передано новое изображение
+            instance.image = image
+            instance.save()
         return instance
