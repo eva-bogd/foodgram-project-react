@@ -197,11 +197,12 @@ class RecipeModifySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
+        image = validated_data.pop('image', None)
+        if image is None:
+            validated_data['image'] = instance.image
         IngredientInRecipe.objects.filter(recipe=instance).delete()
         self.bulk_create_ingredients(ingredients_data, instance)
         instance.tags.clear()
         instance.tags.set(tags_data)
-        if 'image' in validated_data:
-            validated_data['image']
         super().update(instance=instance, validated_data=validated_data)
         return instance
