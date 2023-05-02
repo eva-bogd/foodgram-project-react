@@ -201,5 +201,7 @@ class RecipeModifySerializer(serializers.ModelSerializer):
         self.bulk_create_ingredients(ingredients_data, instance)
         instance.tags.clear()
         instance.tags.set(tags_data)
+        if 'image' in validated_data:
+            validated_data['image']
         super().update(instance=instance, validated_data=validated_data)
         return instance
