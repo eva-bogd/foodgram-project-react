@@ -114,7 +114,6 @@ class IngredientInRecipeCreateSerializer(serializers.ModelSerializer):
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
-        # if isinstance(data, str) and data.startswith('data:image'):
         if (isinstance(
                 data.get('image'), str)
                 and data.startswith('data:image')):
@@ -172,8 +171,11 @@ class RecipeModifySerializer(serializers.ModelSerializer):
                   'cooking_time',)
 
     def validate(self, attrs):
-        if attrs.get('image') is None and self.instance.get('image') is None:
-            raise serializers.ValidationError("No file was submitted.")
+        if attrs.get('image') is None:
+            if self.instance is None:
+                raise serializers.ValidationError(
+                    {'errors': {'image':"No file was submitted."}})
+            attrs['image'] = self.instance.image
         return attrs
 
     def bulk_create_ingredients(self, ingredients_data, recipe):
