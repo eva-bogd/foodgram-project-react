@@ -123,12 +123,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         return super().to_internal_value(data)
 
-    def run_validation(self, data=serializers.empty):
-        # check if image is required
-        if self.context['request'].method == 'POST' and not data:
-            raise serializers.ValidationError('This field is required.')
-        return super().run_validation(data)
-
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
@@ -166,7 +160,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipeModifySerializer(serializers.ModelSerializer):
     ingredients = IngredientInRecipeCreateSerializer(many=True)
-    image = Base64ImageField()
+    image = Base64ImageField(required=False)
 
     class Meta:
         model = Recipe
@@ -176,6 +170,11 @@ class RecipeModifySerializer(serializers.ModelSerializer):
                   'image',
                   'text',
                   'cooking_time',)
+
+    def validate(self, attrs):
+        if attrs.get('image') is None and self.instance.get('image') is None:
+            raise serializers.ValidationError("No file was submitted.")
+        return attrs
 
     def bulk_create_ingredients(self, ingredients_data, recipe):
         IngredientInRecipe.objects.bulk_create(
@@ -197,9 +196,6 @@ class RecipeModifySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
-        image = validated_data.pop('image', None)
-        if image is None:
-            validated_data['image'] = instance.image
         IngredientInRecipe.objects.filter(recipe=instance).delete()
         self.bulk_create_ingredients(ingredients_data, instance)
         instance.tags.clear()
