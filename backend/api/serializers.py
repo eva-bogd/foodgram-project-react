@@ -174,7 +174,7 @@ class RecipeModifySerializer(serializers.ModelSerializer):
         if attrs.get('image') is None:
             if self.instance is None:
                 raise serializers.ValidationError(
-                    {'errors': {'image':"No file was submitted."}})
+                    {'errors': {'image': "No file was submitted."}})
             attrs['image'] = self.instance.image
         return attrs
 
