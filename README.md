@@ -4,48 +4,51 @@
 ## Foodgram
 
 **Foodgram** - это удобный помощник в планировании вашего рациона и осуществлении кулинарных фантазий. Здесь вы можете публиковать свои рецепты, изучать кулинарные шедевры других пользователей, сохранять избранные блюда и легко создавать списки продуктов для их приготовления.
-Бэкенд для **Foodgram** написан на фреймворке Django REST framework.
+Бэкенд для **Foodgram** написан на Django + Django REST framework.
 
-### Установка и запуск:
+### Установка
 
-1. Клонировать репозиторий и перейти в него в командной строке:
+Чтобы запустить проект **Foodgram** в контейнерах Docker, выполните следующие шаги:
 
-```
-git clone git@github.com:Eva-48k/foodgram-project-react.git
-```
+1. Склонируйте репозиторий с помощью команды:
 
 ```
-cd foodgram-project-react
+git clone git@github.com:Eva-48k/foodgram-project-react.gitt
 ```
 
-2. Cоздать и активировать виртуальное окружение:
+2. В папке проекта infra/ создайте файл .env со следующим содержимым:
 
 ```
-python3 -m venv env
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+SECRET_KEY=secret_key
 ```
 
-```
-source env/bin/activate
-```
+3. Запустите контейнеры Docker::
 
 ```
-python3 -m pip install --upgrade pip
+docker-compose up --build
 ```
 
-3. Установить зависимости из файла requirements.txt:
+4. Создайте базу данных и примените миграции:
 
 ```
-pip install -r requirements.txt
+docker-compose exec web python manage.py makemigrations
+docker-compose exec web python manage.py migrate
 ```
 
-4. Выполнить миграции:
+5. Создайте суперпользователя:
 
 ```
-python3 manage.py migrate
+python manage.py createsuperuser
 ```
 
-5. Запустить проект:
+6. Загрузите начальные данные:
 
 ```
-python3 manage.py runserver
+docker-compose exec web python load_data_to_postgres.py
 ```
