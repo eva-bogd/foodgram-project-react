@@ -28,7 +28,7 @@ DB_PORT=5432
 SECRET_KEY=secret_key
 ```
 
-3. Запустите контейнеры Docker::
+3. Запустите контейнеры Docker:
 
 ```
 docker-compose up --build
