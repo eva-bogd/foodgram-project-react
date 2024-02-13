@@ -13,7 +13,7 @@
 1. Склонируйте репозиторий с помощью команды:
 
 ```
-git clone git@github.com:Eva-48k/foodgram-project-react.gitt
+git clone https://github.com/eva-bogd/foodgram-project-react.git
 ```
 
 2. В папке проекта infra/ создайте файл .env со следующим содержимым:
